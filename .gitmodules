@@ -21,3 +21,7 @@
 	path = EBRAINS_WorkflowConfigurations
 	url = https://github.com/multiscale-cosim/EBRAINS_WorkflowConfigurations.git
 	branch = main
+[submodule "TVB-multiscale"]
+	path = TVB-multiscale
+	url = https://github.com/the-virtual-brain/tvb-multiscale.git
+	branch = parallelNEST31
