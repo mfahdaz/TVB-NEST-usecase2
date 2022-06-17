@@ -63,6 +63,10 @@ def backEnd_TVB(parameters, simulator=None):
     # Build TVB interfaces and attach them to TVB simulator
     simulator = build_TVB_interfaces(simulator)
 
+    # Interfaces can be accessed with integer indicies i_interface by:
+    # simulator.output_interfaces.interfaces[i_interface]
+    # simulator.input_interfaces.interfaces[i_interface]
+
     # results = simulate_TVB(simulator, simulation_length)
 
     return simulator  # results

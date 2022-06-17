@@ -28,7 +28,6 @@
 # ------------------------------------------------------------------------------
 
 
-from actions_adapters.parameters import Parameters
 from EBRAINS_ConfigManager.global_configurations_manager.xml_parsers.default_directories_enum import DefaultDirectories
 
 
@@ -104,16 +103,21 @@ class Transformer:
             log_configurations=self._log_settings,
             target_directory=DefaultDirectories.SIMULATION_RESULTS)
 
-        self.__parameters = Parameters(self.__path_to_parameters_file)
+        self.__parameters = param
 
         # This is the function that plays the role of the Entrypoint:
-        self._tvb_to_nest_transformers = \
-            self.__parameters.build_TVBtoSpikeNet_transformer_interfaces(
-                self.__parameters.prepare_TVBtoSpikeNet_transformer_interface)
+        self._tvb_to_nest_transformers = build_TVBtoSpikeNet_transformer_interfaces(
+            self.__parameters.prepare_TVBtoSpikeNet_transformer_interface)
         # TODO: I have assumed that the two directions are separated!!!
-        # self._nest_to_tvb_transformers =
-        #   self.__parameters.build_spikeNetToTVB_transformer_interfaces(
-        #       self.__parameters.prepare_spikeNetToTVB_transformer_interface)
+        # self._nest_to_tvb_transformers = build_spikeNetToTVB_transformer_interfaces(
+        #   self.__parameters.prepare_spikeNetToTVB_transformer_interface)
+
+        # usages for a tranformer of integer index id_transformer:
+        # self._tvb_to_nest_transformers[id_transformer].input_time = input_time
+        # self._tvb_to_nest_transformers[id_transformer].input_buffer = input_data
+        # self._tvb_to_nest_transformers[id_transformer].compute()
+        # output_time = self._tvb_to_nest_transformers[id_transformer].output_time
+        # output_data = self._tvb_to_nest_transformers[id_transformer].output_buffer
 
         self.__logger.info("Initialised")
 
