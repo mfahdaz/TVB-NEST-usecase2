@@ -65,7 +65,7 @@ def backEnd_spikeNet(parameters, nest=None):
     nest_network, nest_nodes_inds = parameters.build_nest_network(nest=nest)
 
     # Build the spikeNet interfaces and attach them to the spikeNet network
-    nest_network = build_spikeNet_interfaces(nest_network)
+    nest_network = build_spikeNet_interfaces(nest_network, parameters)
 
     # Configure the interfaces
     if nest_network.input_interfaces:
@@ -105,7 +105,7 @@ class NESTAdapter:
         """
 
         # This is the function that plays the role of the Entrypoint:
-        self._nest_network = backEnd_NEST(self.__parameters, nest=simulator)
+        self._nest_network = backEnd_spikeNet(self.__parameters, nest=simulator)
         # self._nest = self._nest_network.nest_instance
 
         # The NEST input and output proxy devices can be accessed with integer indices i_interface and i_proxy_node as:

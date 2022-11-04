@@ -82,3 +82,7 @@ def configure_TVBtoSpikeNet_transformer_interfaces():
     tvb_to_spikeNet_trans_interface_builder.dump_all_interfaces()
 
     return tvb_to_spikeNet_trans_interface_builder
+
+
+def frontEnd_TVBtoSpikeNet():
+    return configure_TVBtoSpikeNet_transformer_interfaces()  # not necessary to return anything

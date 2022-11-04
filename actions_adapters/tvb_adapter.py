@@ -28,7 +28,7 @@ numpy.random.seed(125)
 # - and the TVB interfaces based on the configurations written to files by the FRONTEND.
 
 def build_TVB_interfaces(simulator, parameters):
-    tvb_interface_builder = parameters.prepare_TVB_interface(simulator=simulator)[0]
+    tvb_interface_builder = parameters.prepare_TVB_interface_builder(simulator=simulator)[0]
 
     # Load TVB interfaces configurations
     tvb_interface_builder.load_all_interfaces()
@@ -56,7 +56,7 @@ def build_TVB_interfaces(simulator, parameters):
 def backEnd_TVB(parameters, simulator=None):
     if simulator is None:
         # Build TVB simulator
-        simulator = parameters.build_tvb_simulator(parameters)
+        simulator = parameters.build_tvb_simulator()
 
     simulator.simulation_length = parameters.simulation_time
 

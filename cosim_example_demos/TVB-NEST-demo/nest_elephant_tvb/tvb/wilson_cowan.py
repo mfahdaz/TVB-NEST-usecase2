@@ -48,7 +48,7 @@ def print_interfaces_model_info():
     print_enum(Transformers)
 
 
-def prepare_TVB_interface(simulator=None):
+def prepare_TVB_interface_builder(simulator=None):
     config, n_regions, NEST_MODEL_BUILDERS, nest_nodes_inds, n_neurons = configure()
 
     from tvb_multiscale.core.interfaces.base.io import RemoteSenders, RemoteReceivers
@@ -84,7 +84,7 @@ def prepare_TVB_interface(simulator=None):
 
 
 def configure_TVB_interfaces(simulator=None):
-    tvb_interface_builder, nest_nodes_inds = prepare_TVB_interface(simulator=simulator)
+    tvb_interface_builder, nest_nodes_inds = prepare_TVB_interface_builder(simulator=simulator)
 
     # or setting a nonopinionated builder:
 
@@ -165,7 +165,7 @@ def build_tvb_simulator():
         "Q": np.array([0.0])
     }
 
-    # -----------------------------------Build cosimunlator manually--------------------------------
+    # -----------------------------------Build cosimulator manually--------------------------------
     from tvb_multiscale.core.tvb.cosimulator.cosimulator_parallel import CoSimulatorMPI
 
     from tvb.datatypes.connectivity import Connectivity
