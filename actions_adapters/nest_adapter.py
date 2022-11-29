@@ -106,21 +106,21 @@ class NESTAdapter:
 
         # This is the function that plays the role of the Entrypoint:
         self._nest_network = backEnd_spikeNet(self.__parameters, nest=simulator)
-        # self._nest = self._nest_network.nest_instance
+        self._nest = self._nest_network.nest_instance
 
-        # The NEST input and output proxy devices can be accessed with integer indices i_interface and i_proxy_node as:
-        # nest_network.input_interfaces.interfaces[i_interface].proxy.target[i_proxy_node]
-        # nest_network.output_interfaces.interfaces[i_interface].proxy.source[i_proxy_node]
+        # # The NEST input and output proxy devices can be accessed with integer indices i_interface and i_proxy_node as:
+        # self._nest_network.input_interfaces.interfaces[i_interface].proxy.target[i_proxy_node]
+        # self._nest_network.output_interfaces.interfaces[i_interface].proxy.source[i_proxy_node]
+        #
+        # # and their gids like for each proxy node:
+        # self._nest_network.input_interfaces.interfaces[i_interface].proxy.target[i_proxy_node].global_id
+        # self._nest_network.output_interfaces.interfaces[i_interface].proxy.source[i_proxy_node].global_id
+        # # which return the gid as a tuple of integers
 
-        # and their gids like for each proxy node:
-        # nest_network.input_interfaces.interfaces[i_interface].proxy.target[i_proxy_node].global_id
-        # nest_network.output_interfaces.interfaces[i_interface].proxy.source[i_proxy_node].global_id
-        # which return the gid as a tuple of integers
-
-        # or for all proxy nodes of an interface together:
-        # nest_network.output_interfaces.interfaces[i_interface].proxy_gids
-        # nest_network.input_interfaces.interfaces[i_interface].proxy_gids
-        # which return the gids as a numpy.ndarray of integers
+        # # or for all proxy nodes of an interface together:
+        # self._nest_network.output_interfaces.interfaces[i_interface].proxy_gids
+        # self._nest_network.input_interfaces.interfaces[i_interface].proxy_gids
+        # # which return the gids as a numpy.ndarray of integers
 
         return self._nest_network.input_interfaces, self._nest_network.output_interfaces
 
