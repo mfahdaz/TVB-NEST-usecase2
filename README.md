@@ -3,9 +3,10 @@
 WIP
 ---
 ### TODO:
-add:
-- Vagrantfile: config.vm.network "forwarded_port", guest: 8888, host: 8888
-- VM: 
-    - pip install markupsafe==2.0.1
-    - pip install jupyter
-    - export PATH=/home/vagrant/.local/bin:$PATH
+bootstrap:
+ - tvb-multiscale installation --> compare with setup.py in submodule
+    - installation path not /usr/... but local cosim package directory
+    - Denis: create new branch from ray
+ - submodules (tvb_multiscale) are too large:
+    - --depth 1 or --shallow-submodules did not work
+ - CHECK proper installation
