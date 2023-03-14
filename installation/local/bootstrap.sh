@@ -71,7 +71,7 @@ echo "1" | sudo update-alternatives --config mpirun 1>/dev/null 2>&1 # --> choos
 #
 # NOTE: Specific versions are required for some packages
 pip install cython elephant mpi4py numpy==1.23.4 pyzmq requests testresources \
-	pandas xarray
+	pandas xarray pyspike
 pip install --no-cache --target=${CO_SIM_SITE_PACKAGES} \
         tvb-library==2.8 tvb-contrib==2.7.2 tvb-gdist==2.2 
 # jupyter notebook stuff
@@ -81,7 +81,7 @@ export PATH=/home/vagrant/.local/bin:$PATH
 # 
 # STEP 5 - cloning github repos
 #
-git clone --recurse-submodules --depth 1 --jobs 4 https://github.com/${GIT_DEFAULT_NAME}/TVB-NEST-usecase2.git
+git clone --recurse-submodules --depth 1 --shallow-submodules --jobs 4 https://github.com/${GIT_DEFAULT_NAME}/TVB-NEST-usecase2.git
 
 #
 # STEP 6 - NEST compilation
