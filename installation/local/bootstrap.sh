@@ -99,7 +99,7 @@ mkdir -p ${CO_SIM_NEST}
 cd ${CO_SIM_NEST_BUILD}
 cmake \
     -DCMAKE_INSTALL_PREFIX:PATH=${CO_SIM_NEST} \
-    ${CO_SIM_ROOT_PATH}/TVB-NEST-usecase1/nest-simulator/ \
+    ${CO_SIM_ROOT_PATH}/TVB-NEST-usecase2/nest-simulator/ \
     -Dwith-mpi=ON \
     -Dwith-openmp=ON \
     -Dwith-readline=ON \
