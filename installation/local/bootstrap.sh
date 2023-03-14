@@ -71,13 +71,17 @@ echo "1" | sudo update-alternatives --config mpirun 1>/dev/null 2>&1 # --> choos
 #
 # NOTE: Specific versions are required for some packages
 pip install --no-cache --target=${CO_SIM_SITE_PACKAGES} \
-        tvb-contrib==2.2 tvb-data==2.0 tvb-gdist==2.1 tvb-library==2.2 \
-        cython elephant mpi4py numpy==1.23 pyzmq requests testresources
+        tvb-contrib==2.8 tvb-gdist==2.8 tvb-library==2.8 \
+        cython elephant mpi4py numpy==1.23.4 pyzmq requests testresources \
+	pandas==1.5.2 xarray
+# jupyter notebook stuff
+pip install jupyter markupsafe==2.0.1
+export PATH=/home/vagrant/.local/bin:$PATH
 
 # 
 # STEP 5 - cloning github repos
 #
-git clone --recurse-submodules --jobs 4 https://github.com/${GIT_DEFAULT_NAME}/TVB-NEST-usecase1.git
+git clone --recurse-submodules --jobs 4 https://github.com/${GIT_DEFAULT_NAME}/TVB-NEST-usecase2.git
 
 #
 # STEP 6 - NEST compilation
@@ -143,12 +147,12 @@ fi
 # STEP 8 - Generating the .source file based on ENV variables
 #
 NEST_PYTHON_PREFIX=`find ${CO_SIM_NEST} -name site-packages`
-CO_SIM_USE_CASE_ROOT_PATH=${CO_SIM_ROOT_PATH}/TVB-NEST-usecase1
-CO_SIM_MODULES_ROOT_PATH=${CO_SIM_ROOT_PATH}/TVB-NEST-usecase1
+CO_SIM_USE_CASE_ROOT_PATH=${CO_SIM_ROOT_PATH}/TVB-NEST-usecase2
+CO_SIM_MODULES_ROOT_PATH=${CO_SIM_ROOT_PATH}/TVB-NEST-usecase2
 
 SUFFIX_PYTHONPATH="\${PYTHONPATH:+:\$PYTHONPATH}"
 
-cat <<.EOSF > ${CO_SIM_ROOT_PATH}/TVB-NEST-usecase1.source
+cat <<.EOSF > ${CO_SIM_ROOT_PATH}/TVB-NEST-usecase2.source
 #!/bin/bash
 export CO_SIM_ROOT_PATH=${CO_SIM_ROOT_PATH}
 export CO_SIM_USE_CASE_ROOT_PATH=${CO_SIM_USE_CASE_ROOT_PATH}
@@ -185,7 +189,7 @@ python3 \${CO_SIM_USE_CASE_ROOT_PATH}/main.py \\
 .EORF
 
 cat <<.EOKF >${CO_SIM_ROOT_PATH}/kill_co_sim_PIDs.sh
-for co_sim_PID in \`ps aux | grep TVB-NEST-usecase1 | sed 's/user//g' | sed 's/^ *//g' | cut -d" " -f 1\`; do kill -9 \$co_sim_PID; done
+for co_sim_PID in \`ps aux | grep TVB-NEST-usecase2 | sed 's/user//g' | sed 's/^ *//g' | cut -d" " -f 1\`; do kill -9 \$co_sim_PID; done
 .EOKF
 
 #
