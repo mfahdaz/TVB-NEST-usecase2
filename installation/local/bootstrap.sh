@@ -188,11 +188,12 @@ export PATH=${CO_SIM_NEST}/bin:${PATH}
 
 
 # source TVB_NEST_usecase2.source
+echo "STEP 9 - sourcing TVB-NEST-usecase2.source"
+source ${CO_SIM_ROOT_PATH}/TVB-NEST-usecase2.source
+
 echo "STEP 9 - installing TVB_Multiscale"
-cd ${CO_SIM_ROOT_PATH}
-source TVB_NEST_usecase2.source
-cd ${CO_SIM_USE_CASE_ROOT_PATH}/TVB-multiscale
-python3 setup.py develop --user
+python3 ${CO_SIM_USE_CASE_ROOT_PATH}/TVB-multiscale/setup.py develop --user
+
 cd ${CO_SIM_ROOT_PATH}
 
 
