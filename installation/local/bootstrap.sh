@@ -186,6 +186,16 @@ export PYTHONPATH=${CO_SIM_MODULES_ROOT_PATH}:${CO_SIM_SITE_PACKAGES}:${NEST_PYT
 export PATH=${CO_SIM_NEST}/bin:${PATH}
 .EOSF
 
+
+# source TVB_NEST_usecase2.source
+echo "STEP 9 - installing TVB_Multiscale"
+cd ${CO_SIM_ROOT_PATH}
+source TVB_NEST_usecase2.source
+cd ${CO_SIM_USE_CASE_ROOT_PATH}/TVB-multiscale
+python3 setup.py develop --user
+cd ${CO_SIM_ROOT_PATH}
+
+
 # 
 # STEP 9 - Generating the run_on_local.sh  
 cat <<.EORF > ${CO_SIM_ROOT_PATH}/run_on_local.sh
