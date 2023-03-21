@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# exit when any command fails
+set -e
+
+# keep track of the last executed command
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+# echo an error message before exiting
+trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
+
 #
 # USAGE: 
 #   a) using defaults <BASELINEPATH>=${HOME} <GITUSERNAME>=multiscale-cosim
@@ -9,6 +17,8 @@
 #        sh ./TVB_NEST_usecase1_ubuntu_setting_up.sh <BASELINEPATH> <GITUSERNAME>
 #       e.g. 
 #           ./TVB_NEST_usace1_ubuntu_setting_up.sh /opt/MY_COSIM sontheimer
+
+
 
 BASELINE_PATH="/home/vagrant"
 BASELINE_PATH=${1:-${BASELINE_PATH}}
@@ -70,10 +80,12 @@ echo "1" | sudo update-alternatives --config mpirun 1>/dev/null 2>&1 # --> choos
 # STEP 4 - TVB
 #
 # NOTE: Specific versions are required for some packages
-pip install cython elephant mpi4py numpy==1.23.4 pyzmq requests testresources \
-	pandas xarray pyspike
-pip install --no-cache --target=${CO_SIM_SITE_PACKAGES} \
-        tvb-library==2.8 tvb-contrib==2.7.2 tvb-gdist==2.2 
+pip install numpy==1.23.4 cython elephant mpi4py pyzmq requests testresources pandas xarray
+
+# TVB instllation
+pip install --no-cache --target=${CO_SIM_SITE_PACKAGES} tvb-library==2.8 tvb-contrib==2.7.2 tvb-gdist==2.2 
+
+
 # jupyter notebook stuff
 pip install jupyter markupsafe==2.0.1
 export PATH=/home/vagrant/.local/bin:$PATH
