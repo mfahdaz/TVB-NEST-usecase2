@@ -30,6 +30,8 @@ GIT_DEFAULT_NAME=${2:-${GIT_DEFAULT_NAME}}
 # STEP 1 - setting up folder locations
 #
 
+echo "STEP 1 - setting up folder locations"
+
 [ -d ${BASELINE_PATH} ] \
 	|| (echo "${BASELINE_PATH} does not exists"; exit 1;)
 
@@ -54,17 +56,24 @@ CO_SIM_NEST=${CO_SIM_ROOT_PATH}/nest
 # STEP 2 - installing linux packages
 #
 # STEP 2.1 - base packages
+
+echo "STEP 2.1 - installing base packages"
 sudo apt update
 sudo apt install -y build-essential cmake git python3 python3-pip
 #
 # STEP 2.2 - packages used by NEST, TVB and the use-case per se
+echo "STEP 2.2 - installing usecase base dependencies packages"
 sudo apt install -y doxygen
 sudo apt install -y libboost-all-dev libgsl-dev libltdl-dev \
                     libncurses-dev libreadline-dev 
 sudo apt install -y mpich
 
+
+export PATH=/home/vagrant/.local/bin:$PATH
 #
 # STEP 2.3 - switching the default MPI installed packages to MPICH
+echo "STEP 2.3 - switching to MPICH"
+
 #   Selection    Path                     Priority   Status
 #------------------------------------------------------------
 #* 0            /usr/bin/mpirun.openmpi   50        auto mode
@@ -75,20 +84,24 @@ echo "1" | sudo update-alternatives --config mpirun 1>/dev/null 2>&1 # --> choos
  
 #
 # STEP 3 - install python packages for the TVB-NEST use-case
+# NOTE the python packages are installed together with TVB in STEP 4
 #
 #
 # STEP 4 - TVB
 #
-# NOTE: Specific versions are required for some packages
-pip install numpy==1.23.4 cython elephant mpi4py pyzmq requests testresources pandas xarray
 
+# NOTE: Specific versions are required for some packages
+# NOTE The order is important here to let TVB finda and install correct dependencies such as numpy<1.24 for numba0.56
 # TVB instllation
-pip install --no-cache --target=${CO_SIM_SITE_PACKAGES} tvb-library==2.8 tvb-contrib==2.7.2 tvb-gdist==2.2 
+echo "STEP 3 - installing TVB and python dependencies (specific versions)"
+pip install --no-cache --target=${CO_SIM_SITE_PACKAGES} tvb-library==2.8 tvb-contrib==2.7.2 tvb-gdist==2.2 \
+							cython elephant mpi4py numpy==1.23.4 pyzmq requests testresources pandas xarray
 
 
 # jupyter notebook stuff
+echo "STEP 5 - installing jupyter"
 pip install jupyter markupsafe==2.0.1
-export PATH=/home/vagrant/.local/bin:$PATH
+#export PATH=/home/vagrant/.local/bin:$PATH
 
 # 
 # STEP 5 - cloning github repos
@@ -172,6 +185,16 @@ export CO_SIM_MODULES_ROOT_PATH=${CO_SIM_MODULES_ROOT_PATH}
 export PYTHONPATH=${CO_SIM_MODULES_ROOT_PATH}:${CO_SIM_SITE_PACKAGES}:${NEST_PYTHON_PREFIX}${SUFFIX_PYTHONPATH}
 export PATH=${CO_SIM_NEST}/bin:${PATH}
 .EOSF
+
+
+# source TVB_NEST_usecase2.source
+echo "STEP 9 - installing TVB_Multiscale"
+cd ${CO_SIM_ROOT_PATH}
+source TVB_NEST_usecase2.source
+cd ${CO_SIM_USE_CASE_ROOT_PATH}/TVB-multiscale
+python3 setup.py develop --user
+cd ${CO_SIM_ROOT_PATH}
+
 
 # 
 # STEP 9 - Generating the run_on_local.sh  
