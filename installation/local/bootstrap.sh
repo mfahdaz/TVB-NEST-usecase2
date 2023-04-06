@@ -29,8 +29,9 @@ GIT_DEFAULT_NAME=${2:-${GIT_DEFAULT_NAME}}
 #
 # STEP 1 - setting up folder locations
 #
-
+echo
 echo "STEP 1 - setting up folder locations"
+echo
 
 [ -d ${BASELINE_PATH} ] \
 	|| (echo "${BASELINE_PATH} does not exists"; exit 1;)
@@ -56,13 +57,16 @@ CO_SIM_NEST=${CO_SIM_ROOT_PATH}/nest
 # STEP 2 - installing linux packages
 #
 # STEP 2.1 - base packages
-
+echo
 echo "STEP 2.1 - installing base packages"
+echo
 sudo apt update
 sudo apt install -y build-essential cmake git python3 python3-pip
 #
 # STEP 2.2 - packages used by NEST, TVB and the use-case per se
+echo
 echo "STEP 2.2 - installing usecase base dependencies packages"
+echo
 sudo apt install -y doxygen
 sudo apt install -y libboost-all-dev libgsl-dev libltdl-dev \
                     libncurses-dev libreadline-dev 
@@ -72,8 +76,9 @@ sudo apt install -y mpich
 export PATH=/home/vagrant/.local/bin:$PATH
 #
 # STEP 2.3 - switching the default MPI installed packages to MPICH
+echo
 echo "STEP 2.3 - switching to MPICH"
-
+echo
 #   Selection    Path                     Priority   Status
 #------------------------------------------------------------
 #* 0            /usr/bin/mpirun.openmpi   50        auto mode
@@ -93,20 +98,25 @@ echo "1" | sudo update-alternatives --config mpirun 1>/dev/null 2>&1 # --> choos
 # NOTE: Specific versions are required for some packages
 # NOTE The order is important here to let TVB finda and install correct dependencies such as numpy<1.24 for numba0.56
 # TVB instllation
+echo
 echo "STEP 3 - installing TVB and python dependencies (specific versions)"
+echo
 pip install --no-cache --target=${CO_SIM_SITE_PACKAGES} tvb-library==2.8 tvb-contrib==2.7.2 tvb-gdist==2.2 \
 							cython elephant mpi4py numpy==1.23.4 pyzmq requests testresources pandas xarray
 
 
 # jupyter notebook stuff
+echo
 echo "STEP 5 - installing jupyter"
+echo
 pip install jupyter markupsafe==2.0.1
 #export PATH=/home/vagrant/.local/bin:$PATH
 
 # 
 # STEP 5 - cloning github repos
 #
-git clone --recurse-submodules --depth 1 --shallow-submodules --jobs 4 https://github.com/${GIT_DEFAULT_NAME}/TVB-NEST-usecase2.git
+# git clone --recurse-submodules --depth 1 --shallow-submodules --jobs 4 https://github.com/${GIT_DEFAULT_NAME}/TVB-NEST-usecase2.git
+git clone --recurse-submodules --jobs 4 https://github.com/${GIT_DEFAULT_NAME}/TVB-NEST-usecase2.git
 
 #
 # STEP 6 - NEST compilation
@@ -188,10 +198,14 @@ export PATH=${CO_SIM_NEST}/bin:${PATH}
 
 
 # source TVB_NEST_usecase2.source
+echo
 echo "STEP 9 - sourcing TVB-NEST-usecase2.source"
+echo
 source ${CO_SIM_ROOT_PATH}/TVB-NEST-usecase2.source
 
+echo
 echo "STEP 9 - installing TVB_Multiscale"
+echo
 python3 ${CO_SIM_USE_CASE_ROOT_PATH}/TVB-multiscale/setup.py develop --user
 
 cd ${CO_SIM_ROOT_PATH}
