@@ -25,4 +25,4 @@
 [submodule "TVB-multiscale"]
 	path = TVB-multiscale
 	url = https://github.com/the-virtual-brain/tvb-multiscale.git
-	branch = ebrains_cosim
+	branch = parallel
