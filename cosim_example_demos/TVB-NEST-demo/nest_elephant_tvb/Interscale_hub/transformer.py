@@ -29,60 +29,7 @@
 
 
 from EBRAINS_ConfigManager.global_configurations_manager.xml_parsers.default_directories_enum import DefaultDirectories
-
-
-# BACKEND:
-# Backend functions will be run upon runtime to build the TVB --> NEST interfaces
-# This is the entrypoint for the EBRAINS Cosimulation platform
-def build_TVBtoSpikeNet_transformer_interfaces(prepare_TVBtoSpikeNet_transformer_interface):
-    tvb_to_spikeNet_trans_interface_builder = prepare_TVBtoSpikeNet_transformer_interface()
-
-    # Load TVB to spikeNet interfaces configurations
-    tvb_to_spikeNet_trans_interface_builder.load_all_interfaces()
-
-    # Configure TVB to spikeNet interfaces' builder:
-    tvb_to_spikeNet_trans_interface_builder.configure()
-    # tvb_to_spikeNet_trans_interface_builder.print_summary_info_details(recursive=1)
-
-    # Build TVB to spikeNet interfaces
-    tvb_to_spikeNet_trans_interfaces = tvb_to_spikeNet_trans_interface_builder.build()
-
-    print("\n\noutput (TVB -> ... -> Transformer -> ... -> spikeNet coupling) interfaces:\n")
-    tvb_to_spikeNet_trans_interfaces.print_summary_info_details(recursive=2)
-
-    # All that EBRAINS wants is the transformers:
-    transformers = []
-    for interface in tvb_to_spikeNet_trans_interfaces.interfaces:
-        transformers.append(interface.transformer)
-
-    return transformers
-
-
-# BACKEND:
-# Backend functions will be run upon runtime to build the TVB <-- NEST interfaces
-# This is the entrypoint for the EBRAINS Cosimulation platform
-def build_spikeNetToTVB_transformer_interfaces(prepare_spikeNetToTVB_transformer_interface):
-    spikeNet_to_tvb_trans_interface_builder = prepare_spikeNetToTVB_transformer_interface()
-
-    # Load spikeNet to TVB interfaces configurations
-    spikeNet_to_tvb_trans_interface_builder.load_all_interfaces()
-
-    # Configure spikeNet to TVB interfaces' builder:
-    spikeNet_to_tvb_trans_interface_builder.configure()
-    # spikeNet_to_tvb_trans_interface_builder.print_summary_info_details(recursive=1)
-
-    # Build spikeNet to TVB interfaces
-    spikeNet_to_tvb_trans_interfaces = spikeNet_to_tvb_trans_interface_builder.build()
-
-    print("\n\ninput (TVB<- ... <- Transformer <- ... <- spikeNet update) interfaces:\n")
-    spikeNet_to_tvb_trans_interfaces.print_summary_info_details(recursive=2)
-
-    # All that EBRAINS wants is the transformers:
-    transformers = []
-    for interface in spikeNet_to_tvb_trans_interfaces.interfaces:
-        transformers.append(interface.transformer)
-
-    return transformers
+from .backend import tvb_to_nest_init, nest_to_tvb_init
 
 
 class Transformer:
@@ -106,18 +53,18 @@ class Transformer:
         self.__parameters = param
 
         # This is the function that plays the role of the Entrypoint:
-        self._tvb_to_nest_transformers = build_TVBtoSpikeNet_transformer_interfaces(
+        self._tvb_to_nest_app = tvb_to_nest_init(
             self.__parameters.prepare_TVBtoSpikeNet_transformer_interface)
         # TODO: I have assumed that the two directions are separated!!!
-        # self._nest_to_tvb_transformers = build_spikeNetToTVB_transformer_interfaces(
+        # self.nest_to_tvb_app = nest_to_tvb_init(
         #   self.__parameters.prepare_spikeNetToTVB_transformer_interface)
 
         # usages for a tranformer of integer index id_transformer:
-        # self._tvb_to_nest_transformers[id_transformer].input_time = input_time
-        # self._tvb_to_nest_transformers[id_transformer].input_buffer = input_data
-        # self._tvb_to_nest_transformers[id_transformer].compute()
-        # output_time = self._tvb_to_nest_transformers[id_transformer].output_time
-        # output_data = self._tvb_to_nest_transformers[id_transformer].output_buffer
+        # self._tvb_to_nest_app.tvb_to_spikeNet_interfaces.interfaces[id_transformer].transformer.input_time = input_time
+        # self._tvb_to_nest_app.tvb_to_spikeNet_interfaces.interfaces[id_transformer].transformer.input_buffer = input_data
+        # self._tvb_to_nest_app.tvb_to_spikeNet_interfaces.interfaces[id_transformer].transformer.compute()
+        # output_time = self._tvb_to_nest_app.tvb_to_spikeNet_interfaces.interfaces[id_transformer].transformer.output_time
+        # output_data = self._tvb_to_nest_app.tvb_to_spikeNet_interfaces.interfaces[id_transformer].transformer.output_buffer
 
         self.__logger.info("Initialised")
 
