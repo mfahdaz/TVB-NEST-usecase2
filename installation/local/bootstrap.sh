@@ -97,7 +97,7 @@ echo "1" | sudo update-alternatives --config mpirun 1>/dev/null 2>&1 # --> choos
 
 # NOTE: Specific versions are required for some packages
 # NOTE The order is important here to let TVB finda and install correct dependencies such as numpy<1.24 for numba0.56
-# TVB instllation
+# TVB installation
 echo
 echo "STEP 3 - installing TVB and python dependencies (specific versions)"
 echo
