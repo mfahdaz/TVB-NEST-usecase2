@@ -2,11 +2,8 @@
 ## TVB Multiscale
 WIP
 ---
-### TODO:
-bootstrap:
- - tvb-multiscale installation --> compare with setup.py in submodule
-    - installation path not /usr/... but local cosim package directory
-    - Denis: create new branch from ray
- - submodules (tvb_multiscale) are too large:
-    - --depth 1 or --shallow-submodules did not work
- - CHECK proper installation
+### REMINDER:
+0. cd to a folder with bootstrap.sh, vagrantfile and a folder "shared"
+1.vagrant up
+2.vagrant ssh
+3. source TVB-NEST-usecase2.source 
