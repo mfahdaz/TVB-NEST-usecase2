@@ -260,7 +260,9 @@ def test():
     config = configure(config_class=Config)
 
     # TVB
-    tvb_ts = DataArray.from_dict(load_pickled_dict(os.path.join(config.out.FOLDER_RES, "source_ts.pkl")))
+    tvb_ts = DataArray.from_dict(
+        load_pickled_dict(
+            os.path.join(config.out.FOLDER_RES, "source_ts.pkl")))
 
     # Time:
     time = tvb_ts.coords["Time"].values
@@ -274,8 +276,10 @@ def test():
                        np.array([0.50744988, 0.56958207]), atol=1e-06)
 
     # NEST data
-    nest_mean_rate = DataArray.from_dict(os.path.join(config.out.FOLDER_RES, "Mean Populations' Spikes' Rates.pkl"))
-    assert nest_mean_rate.shape == (2,2)
+    nest_mean_rate = DataArray.from_dict(
+        load_pickled_dict(
+            os.path.join(config.out.FOLDER_RES, "Mean Populations' Spikes' Rates.pkl")))
+    assert nest_mean_rate.shape == (2, 2)
     assert np.allclose(nest_mean_rate.values,
                        np.array([[28.76551672, 27.65915069],
                                  [28.76551672, 27.65915069]]),
