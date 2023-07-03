@@ -250,27 +250,37 @@ def run_example(plot=True):
 
 
 def test():
+    import os
+    from xarray import DataArray
+    from tvb_multiscale.core.utils.file_utils import load_pickled_dict
+
 
     run_example()
 
     config = configure(config_class=Config)
-    # # TVB
-    # assert len(results) == 1
-    # assert len(results[0]) == 2
-    #
-    # # Time:
-    # time = results[0][0]
-    # assert time.size == 10044
-    # dts = np.diff(time)
-    # assert np.allclose([np.mean(dts), np.min(dts), np.max(dts)], 0.1, atol=1e-06)
-    #
-    # # data
-    # data = results[0][1]
-    # assert data.shape == (10044, 2, 68, 1)
-    # assert np.allclose(data.squeeze().mean(axis=0).mean(axis=1),
-    #                    np.array([0.50744988, 0.56958207]), atol=1e-06)
+
+    # TVB
+    tvb_ts = DataArray.from_dict(load_pickled_dict(os.path.join(config.out.FOLDER_RES, "source_ts.pkl")))
+
+    # Time:
+    time = tvb_ts.coords["Time"].values
+    assert time.size == 10044
+    dts = np.diff(time)
+    assert np.allclose([np.mean(dts), np.min(dts), np.max(dts)], 0.1, atol=1e-06)
+
+    # data
+    assert tvb_ts.shape == (10044, 2, 68, 1)
+    assert np.allclose(tvb_ts.values.squeeze().mean(axis=0).mean(axis=1),
+                       np.array([0.50744988, 0.56958207]), atol=1e-06)
 
     # NEST data
+    nest_mean_rate = DataArray.from_dict(os.path.join(config.out.FOLDER_RES, "Mean Populations' Spikes' Rates.pkl"))
+    assert nest_mean_rate.shape == (2,2)
+    assert np.allclose(nest_mean_rate.values,
+                       np.array([[28.76551672, 27.65915069],
+                                 [28.76551672, 27.65915069]]),
+                       atol=1e-06
+                       )
 
 
 if __name__ == "__main__":
