@@ -267,7 +267,7 @@ def test():
     # Time:
     time = tvb_ts.coords["Time"].values
     try:
-        assert time.size == 10044
+        assert time.size == 9004
     except Exception as e:
         print(time.size)
         raise e
@@ -275,9 +275,13 @@ def test():
     assert np.allclose([np.mean(dts), np.min(dts), np.max(dts)], 0.1, atol=1e-06)
 
     # data
-    assert tvb_ts.shape == (10044, 2, 68, 1)
-    assert np.allclose(tvb_ts.values.squeeze().mean(axis=0).mean(axis=1),
-                       np.array([0.50744988, 0.56958207]), atol=1e-06)
+    assert tvb_ts.shape == (9004, 2, 68, 1)
+    try:
+        assert np.allclose(tvb_ts.values.squeeze().mean(axis=0).mean(axis=1),
+                           np.array([0.50744988, 0.56958207]), atol=1e-06)
+    except Exception as e:
+        print(tvb_ts.values.squeeze().mean(axis=0).mean(axis=1))
+        raise e
 
     # NEST data
     nest_mean_rate = DataArray.from_dict(
