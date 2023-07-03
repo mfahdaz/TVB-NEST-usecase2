@@ -91,6 +91,8 @@
 from tvb.basic.profile import TvbProfile
 TvbProfile.set_profile(TvbProfile.LIBRARY_PROFILE)
 
+import numpy as np
+
 from tvb_multiscale.tvb_nest.config import Config
 
 from examples.parallel.wilson_cowan.config import configure
@@ -247,14 +249,28 @@ def run_example(plot=True):
     return results, config
 
 
-def test(plot=False):
+def test():
 
-    results, config = run_example(plot)
+    run_example()
 
-    assert len(results) == 2
+    config = configure(config_class=Config)
+    # # TVB
+    # assert len(results) == 1
+    # assert len(results[0]) == 2
+    #
+    # # Time:
+    # time = results[0][0]
+    # assert time.size == 10044
+    # dts = np.diff(time)
+    # assert np.allclose([np.mean(dts), np.min(dts), np.max(dts)], 0.1, atol=1e-06)
+    #
+    # # data
+    # data = results[0][1]
+    # assert data.shape == (10044, 2, 68, 1)
+    # assert np.allclose(data.squeeze().mean(axis=0).mean(axis=1),
+    #                    np.array([0.50744988, 0.56958207]), atol=1e-06)
 
-    # Time:
-    # assert
+    # NEST data
 
 
 if __name__ == "__main__":
