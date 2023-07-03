@@ -266,7 +266,11 @@ def test():
 
     # Time:
     time = tvb_ts.coords["Time"].values
-    assert time.size == 10044
+    try:
+        assert time.size == 10044
+    except Exception as e:
+        print(time.size)
+        raise e
     dts = np.diff(time)
     assert np.allclose([np.mean(dts), np.min(dts), np.max(dts)], 0.1, atol=1e-06)
 
@@ -290,7 +294,7 @@ def test():
 if __name__ == "__main__":
     import sys
 
-    if sys.argv[-1] == "1":
+    if sys.argv[-1] == "test":
         test()
     else:
         run_example()
