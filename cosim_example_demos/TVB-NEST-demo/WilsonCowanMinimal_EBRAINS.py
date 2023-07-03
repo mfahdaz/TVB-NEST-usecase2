@@ -231,16 +231,7 @@ def run_example(plot=True):
         config.figures.FIG_FORMAT = 'png'
         plotter = Plotter(config.figures)
 
-        try:
-            # We need framework_tvb for writing and reading from HDF5 files
-            from tvb_multiscale.core.tvb.io.h5_writer import H5Writer
-            from examples.plot_write_results import write_RegionTimeSeriesXarray_to_h5
-            writer = H5Writer()
-
-        except:
-            writer = False
-
-        tvb_plot_kwargs = {"transient": transient, "plotter": plotter, "writer": writer}
+        tvb_plot_kwargs = {"transient": transient, "plotter": plotter}
         nest_plot_kwargs = dict(tvb_plot_kwargs)
         nest_plot_kwargs.update({"time": results[0][0], "plot_per_neuron": plot_per_neuron})
 
