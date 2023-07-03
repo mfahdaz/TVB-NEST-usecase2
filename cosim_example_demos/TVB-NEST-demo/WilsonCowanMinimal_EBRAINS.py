@@ -244,14 +244,17 @@ def run_example(plot=True):
 
     del tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app
 
-    return results
+    return results, config
 
 
 def test(plot=False):
 
-    results = run_example(plot)
+    results, config = run_example(plot)
 
     assert len(results) == 2
+
+    # Time:
+    # assert
 
 
 if __name__ == "__main__":
