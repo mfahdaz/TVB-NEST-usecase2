@@ -112,12 +112,14 @@ from nest_elephant_tvb.Interscale_hub.backend import final as trans_final
 
 
 def run_for_synchronization_time(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
-                                 trans_to_tvb_cosim_updates):
+                                 trans_to_tvb_cosim_updates, trans_to_nest_cosim_updates):
+    # t0 -> t1
     tvb_to_trans_cosim_updates = tvb_app.run_for_synchronization_time(trans_to_tvb_cosim_updates)
     trans_to_nest_cosim_updates = tvb_to_nest_app.run_for_synchronization_time(tvb_to_trans_cosim_updates)
+    # t0 -> t1
     nest_to_trans_cosim_updates = nest_app.run_for_synchronization_time(trans_to_nest_cosim_updates)
     trans_to_tvb_cosim_updates = nest_to_tvb_app.run_for_synchronization_time(nest_to_trans_cosim_updates)
-    return tvb_app.cosimulator.n_tvb_steps_ran_since_last_synch, trans_to_tvb_cosim_updates
+    return tvb_app.cosimulator.n_tvb_steps_ran_since_last_synch, trans_to_tvb_cosim_updates, trans_to_nest_cosim_updates
 
 
 def run_cosimulation(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
