@@ -85,24 +85,13 @@
 #   https://github.com/nest/nest-simulator/releases/tag/v2.18.0 <br>
 
 
-
 # # WORKFLOW:
 
+# Imports that would be identical for any TVB<->NEST cosimulation script:
 from tvb.basic.profile import TvbProfile
 TvbProfile.set_profile(TvbProfile.LIBRARY_PROFILE)
 
-import numpy as np
-
-from tvb_multiscale.tvb_nest.config import Config
-
-from examples.parallel.wilson_cowan.config import configure
-from examples.parallel.tvb_nest.wilson_cowan.tvb_config import build_tvb_simulator
-from examples.parallel.tvb_nest.wilson_cowan.nest_config import build_nest_network
-from examples.parallel.tvb_nest.wilson_cowan.tvb_interface_config import configure_TVB_interfaces
-from examples.parallel.tvb_nest.wilson_cowan.nest_interface_config import configure_NEST_interfaces
-from examples.parallel.tvb_nest.wilson_cowan.transformers_config import \
-    configure_TVBtoNEST_transformer_interfaces, configure_NESTtoTVB_transformer_interfaces
-
+# Backend cosimulation scripts agnostic to any specific example/mode/use case:
 from nest_elephant_tvb.tvb.backend import init as tvb_init
 from nest_elephant_tvb.nest.backend import init as nest_init
 from nest_elephant_tvb.Interscale_hub.backend import tvb_to_nest_init, nest_to_tvb_init
@@ -110,11 +99,86 @@ from nest_elephant_tvb.tvb.backend import final as tvb_final
 from nest_elephant_tvb.nest.backend import final as nest_final
 from nest_elephant_tvb.Interscale_hub.backend import final as trans_final
 
+# Scripts specific to an example/model/use case:
+# Both front and back end:
+from examples.parallel.wilson_cowan.config import configure
+# Frontend scripts:
+from examples.parallel.tvb_nest.wilson_cowan.tvb_interface_config import configure_TVB_interfaces
+from examples.parallel.tvb_nest.wilson_cowan.nest_interface_config import configure_NEST_interfaces
+from examples.parallel.tvb_nest.wilson_cowan.transformers_config import \
+    configure_TVBtoNEST_transformer_interfaces, configure_NESTtoTVB_transformer_interfaces
+# Backend scripts:
+from examples.parallel.tvb_nest.wilson_cowan.tvb_config import build_tvb_simulator
+from examples.parallel.tvb_nest.wilson_cowan.nest_config import build_nest_network
+
+
+def frontend(config=None):
+    """Frontend code to run if the necessary configuration files haven't been made already available by the user.
+       These files are:
+       - tvb_serial_cosimulator.pkl: serialized TVB simulator
+                                   Parameters usually needed:
+                                    -- simulator.integrator.dt: the integration step of TVB
+                                    -- simulator.connectivity.weights: the TVB connectome weights
+                                    -- simulator.connectivity.delays: the TVB connectome delays
+                                    -- simulator.synchronization_time: the synchronization time of co-simulation,
+                                                                       preconfigured by default based
+                                                                       on the minimum TVB connectome delay
+                                    -- other possible simulator.model parameters,
+                                       depending on the specific example/model/use case.
+                                    -- transformers that perform integration,
+                                        might need other attributes of simulator.integrator
+                                    --  other parameters depending on the specific example/model/use case...
+                                    So, for the moment, we use this way for making these parameters available
+                                    to other processes than the TVB one.
+                                    TODO: Have another way to share these configurations...
+                                    ...and/or send them to the other processes at run time.
+       - TVBInterfaceBuilder_interface: general configuration for TVB input/output interfaces
+       - TVBInterfaceBuilder_output_interface_%id: one configuration for each TVB output interface, id=0,1,...
+       - TVBInterfaceBuilder_input_interface_%id: one configuration for each TVB input interface, id=0,1,...
+       - NESTInterfaceBuilder_interface: general configuration for NEST input/output interfaces
+       - NESTInterfaceBuilder_output_interface_%id: one configuration for each NEST output interface, id=0,1,...
+       - NESTInterfaceBuilder_input_interface_%id: one configuration for each NEST input interface, id=0,1,...
+       - TVBtoSpikeNetTransformerInterfaceBuilder_interface: general configuration
+                                                             for TVB to NEST transformer interfaces
+       - TVBtoSpikeNetTransformerInterfaceBuilder_output_interface_%id: one configuration
+                                                                        for each NEST to TVB transformer interface
+       - SpikeNetToTVBTransformerInterfaceBuilder_interface: general configuration
+                                                             for TVB to NEST transformer interfaces
+       - SpikeNetToTVBTransformerInterfaceBuilder_input_interface_%id: one configuration
+                                                                        for each NEST to TVB transformer interface
+    """
+    if config is None:
+        from tvb_multiscale.tvb_nest.config import Config
+        config = configure(config_class=Config)
+
+    # This is a BACKEND script for creating the TVB Simulator instance, which we run here, at the FRONTEND,
+    # in order to produce the serialized TVB Simulator dictionary file,
+    # to be used for parametrizing the interface configurations
+    simulator = build_tvb_simulator(config=config, config_class=Config)
+
+    # FRONTEND: Configure the TVB<->NEST interfaces
+    tvb_interface_builder = configure_TVB_interfaces(simulator=simulator, config=config, config_class=Config)
+    nest_interface_builder = configure_NEST_interfaces(config=config, config_class=Config)
+    tvb_to_nest_interface_builder = configure_TVBtoNEST_transformer_interfaces(config=config, config_class=Config)
+    nest_to_tvb_interface_builder = configure_NESTtoTVB_transformer_interfaces(config=config, config_class=Config)
+
+    # Outputs only for debugging:
+    return tvb_interface_builder, nest_interface_builder, \
+           tvb_to_nest_interface_builder, nest_to_tvb_interface_builder, simulator
+
 
 def run_for_synchronization_time(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
                                  tvb_to_trans_cosim_updates=None,
                                  nest_to_trans_cosim_updates=None  # None for t = t0
                                  ):
+    """Function for cosimulating for one loop of synchronization.
+       It could be the highest level possible ENTRYPOINT for a parallel cosimulation.
+       In that case, the cosimulation manager would be completely agnostic
+       - of what the Apps of the different processed do,
+       - including the transformation function they employ.
+       The ENTRYPOINT here is just the cosimulation updates' data,
+       which are "thrown over the wall" for the necessary data exchanges.
+    """
     # Transform inputs from NEST at time t...
     if nest_to_trans_cosim_updates is not None:
         # ...if any:
@@ -138,10 +202,14 @@ def run_for_synchronization_time(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb
 
 def run_cosimulation(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
                      advance_simulation_for_delayed_monitors_output=True):
+    """Function for running the whole cosimulation, assuming all Apps are built and configured.
+       This function shows the necessary initialization of the cosimulation.
+    """
+
     import time
     import numpy as np
 
-    # Keep those here safe and easy to access:
+    # Keep the following cosimulation attributes safe and easy to access:
     simulation_length = tvb_app.cosimulator.simulation_length
     synchronization_time = tvb_app.cosimulator.synchronization_time
     synchronization_n_step = tvb_app.cosimulator.synchronization_n_step  # store the configured value
@@ -195,47 +263,25 @@ def run_cosimulation(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
     return tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app, tvb_to_trans_cosim_updates, nest_to_trans_cosim_update
 
 
-def run_example(plot=True):
+def backend(config=None, plot=True):
+    """Function that
+       - builds all components based on user provided configurations,
+       - configures them for cosimulation,
+       - performs cosimulation,
+       - and finalizes (plotting, cleaning up)."""
 
-    config = configure(config_class=Config)
+    if config is None:
+        from tvb_multiscale.tvb_nest.config import Config
+        config = configure(config_class=Config)
 
-    # ## BACKEND: 1. Load structural data <br> (minimally a TVB connectivity)  <br> & prepare TVB simulator  <br> (region mean field model, integrator, monitors etc)
-
-    simulator = build_tvb_simulator(config=config, config_class=Config)
-
-
-    # ## BACKEND: 2. Build and connect the NEST network model <br> (networks of spiking neural populations for fine-scale <br>regions, stimulation devices, spike detectors etc)
-
-    # This would run on NEST only before creating any multiscale cosimulation interface connections.
-    # Here it is assumed that the TVB simulator is already created and we can get some of its attributes,
-    # either by directly accessing it, or via serialization.
-
-    # nest_network = build_nest_network(config=config, config_class=Config)
-
-
-    # ## FRONTEND: 3. Build the TVB-NEST interface
-
-
-    tvb_interface_builder = configure_TVB_interfaces(simulator=simulator, config=config, config_class=Config)
-
-    nest_interface_builder = configure_NEST_interfaces(config=config, config_class=Config)
-
-    tvb_to_nest_interface_builder = configure_TVBtoNEST_transformer_interfaces(config=config, config_class=Config)
-
-    nest_to_tvb_interface_builder = configure_NESTtoTVB_transformer_interfaces(config=config, config_class=Config)
-
-
-    # ## BACKEND:
-    # ### - Build TVB and Spiking Network models and simulators
-    # ### - Build interfaces
-    # ### - Configure co-simulation
-
-    tvb_app = tvb_init(config, tvb_cosimulator_builder=build_tvb_simulator)
-
+    # Build and configure all Apps, and their components, up to the point to start simulation:
+    #TVB app, including TVB Simulator and TVB input and output interfaces.
+    tvb_app = tvb_init(config, build_tvb_simulator)
+    # NEST app, including NEST network and NEST input and output interfaces:
     nest_app = nest_init(config, build_nest_network)
-
+    # TVB to NEST app, including TVB to NEST interfaces and their transformers:
     tvb_to_nest_app = tvb_to_nest_init(config)
-
+    # NEST to TVB app, including NEST to TVB interfaces and their transformers:
     nest_to_tvb_app = nest_to_tvb_init(config)
 
     # Run serially for this test:
@@ -243,51 +289,64 @@ def run_example(plot=True):
         run_cosimulation(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
                          advance_simulation_for_delayed_monitors_output=True)
 
+    # Get TVB results:
     results = list(tvb_app.return_tvb_results())
 
+    # Plot if necessary (for the moment, necessary for the test to run):
     tvb_plot_kwargs = {}
     nest_plot_kwargs = {}
     if plot:
+        # Create a Plotter instance (or it will be created by default within each App):
         from tvb_multiscale.core.plot.plotter import Plotter
-        # set to False for faster plotting of only mean field variables and dates, apart from spikes" rasters:
-        plot_per_neuron = False
-        MAX_VARS_IN_COLS = 3
-        MAX_REGIONS_IN_ROWS = 10
-        MIN_REGIONS_FOR_RASTER_PLOT = 9
-        # Set the transient time to be optionally removed from results:
-        simulation_length = tvb_app.cosimulator.simulation_length
-        transient = 0.1 * simulation_length
         config.figures.SHOW_FLAG = True
         config.figures.SAVE_FLAG = True
         config.figures.FIG_FORMAT = 'png'
         plotter = Plotter(config.figures)
-
-        tvb_plot_kwargs = {"transient": transient, "plotter": plotter}
+                           # Set the transient time to be optionally removed from results:
+        tvb_plot_kwargs = {"transient": 0.1 * tvb_app.cosimulator.simulation_length,
+                           "plotter": plotter}
         nest_plot_kwargs = dict(tvb_plot_kwargs)
-        nest_plot_kwargs.update({"time": results[0][0], "plot_per_neuron": plot_per_neuron})
+        nest_plot_kwargs.update({"time": results[0][0],
+                                 # Set to False for faster plotting of only mean field variables and dates,
+                                 # apart from spikes" rasters:
+                                 "plot_per_neuron": False})
 
         # ### TVB plots and Spiking Network plots upon finalizing
 
+    # Finalize (including optional plotting), cleaning up, etc...
     nest_to_tvb_app = trans_final(nest_to_tvb_app)
     tvb_to_nest_app = trans_final(tvb_to_nest_app)
     nest_app = nest_final(nest_app, plot=plot, **nest_plot_kwargs)
     tvb_app = tvb_final(tvb_app, plot=plot, **tvb_plot_kwargs)
 
+    # Delete apps, optionally:
     del tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app
 
     return results, config
 
 
+def run_example(plot=True):
+
+    # Genereate the common configuration:
+    from tvb_multiscale.tvb_nest.config import Config
+    config = configure(config_class=Config)
+
+    # Run the frontend if the necessary configuration files have not been already made available by the user:
+    frontend(config=None)
+
+    # BACKEND:
+    return backend(config=None, plot=True), config
+
+
 def test():
     import os
+    import numpy as np
     from xarray import DataArray
     from tvb_multiscale.core.utils.file_utils import load_pickled_dict
 
     SPIKES_NUMBERS_PER_REG = [2900, 2800]
 
-    run_example()
-
-    config = configure(config_class=Config)
+    config = run_example()[-1]
 
     # TVB
     tvb_ts = DataArray.from_dict(
