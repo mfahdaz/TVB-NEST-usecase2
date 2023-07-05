@@ -335,7 +335,7 @@ def run_example(plot=True):
     frontend(config=None)
 
     # BACKEND:
-    return backend(config=None, plot=True), config
+    return backend(config=None, plot=True)
 
 
 def test():
