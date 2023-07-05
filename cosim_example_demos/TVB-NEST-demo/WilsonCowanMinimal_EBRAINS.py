@@ -112,14 +112,28 @@ from nest_elephant_tvb.Interscale_hub.backend import final as trans_final
 
 
 def run_for_synchronization_time(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
-                                 trans_to_tvb_cosim_updates, trans_to_nest_cosim_updates):
-    # t0 -> t1
+                                 tvb_to_trans_cosim_updates=None,
+                                 nest_to_trans_cosim_updates=None  # None for t = t0
+                                 ):
+    # Transform inputs from NEST at time t...
+    if nest_to_trans_cosim_updates is not None:
+        # ...if any:
+        trans_to_tvb_cosim_updates = nest_to_tvb_app.run_for_synchronization_time(nest_to_trans_cosim_updates)
+    else:
+        trans_to_tvb_cosim_updates = None
+    # Transform inputs from TVB, at time t...
+    if tvb_to_trans_cosim_updates is not None:
+        # ...if any:
+        trans_to_nest_cosim_updates = tvb_to_nest_app.run_for_synchronization_time(tvb_to_trans_cosim_updates)
+    else:
+        trans_to_nest_cosim_updates = None
+    # TVB t -> t + Tsync
+    # Simulate TVB with or without inputs
     tvb_to_trans_cosim_updates = tvb_app.run_for_synchronization_time(trans_to_tvb_cosim_updates)
-    trans_to_nest_cosim_updates = tvb_to_nest_app.run_for_synchronization_time(tvb_to_trans_cosim_updates)
-    # t0 -> t1
+    # NEST t -> t + Tsync
+    # Simulate TVB with or without inputs
     nest_to_trans_cosim_updates = nest_app.run_for_synchronization_time(trans_to_nest_cosim_updates)
-    trans_to_tvb_cosim_updates = nest_to_tvb_app.run_for_synchronization_time(nest_to_trans_cosim_updates)
-    return tvb_app.cosimulator.n_tvb_steps_ran_since_last_synch, trans_to_tvb_cosim_updates, trans_to_nest_cosim_updates
+    return tvb_app.cosimulator.n_tvb_steps_ran_since_last_synch, tvb_to_trans_cosim_updates, nest_to_trans_cosim_updates
 
 
 def run_cosimulation(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
@@ -127,45 +141,58 @@ def run_cosimulation(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
     import time
     import numpy as np
 
+    # Keep those here safe and easy to access:
     simulation_length = tvb_app.cosimulator.simulation_length
     synchronization_time = tvb_app.cosimulator.synchronization_time
     synchronization_n_step = tvb_app.cosimulator.synchronization_n_step  # store the configured value
     dt = tvb_app.cosimulator.integrator.dt
 
+    # Initial conditions of co-simulation:
+    # Steps left to simulate:
     steps_to_simulate = int(np.round(simulation_length / dt))
+    # Steps already simulated:
     simulated_steps = 0
-    trans_to_tvb_cosim_updates = None
+    # TVB initial condition cosimulation coupling towards NEST:
+    tvb_to_trans_cosim_updates = tvb_app.send_cosim_coupling()
+    # NEST initial condition update towards TVB:
+    nest_to_trans_cosim_updates = None
 
+    # Loop for steps_to_simulate in steps of synchronization_time:
     tvb_app.cosimulator._tic = time.time()
     while steps_to_simulate - simulated_steps > 0:
-        current_simulated_steps, trans_to_tvb_cosim_updates = \
+        current_simulated_steps, tvb_to_trans_cosim_updates, nest_to_trans_cosim_update = \
             run_for_synchronization_time(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
-                                         trans_to_tvb_cosim_updates)
+                                         tvb_to_trans_cosim_updates, nest_to_trans_cosim_updates)
         simulated_steps += current_simulated_steps
         tvb_app.cosimulator._log_print_progress_message(simulated_steps, simulation_length)
 
+    # We might need to simulate a bit more, to get the last delayed results of TVB:
     if advance_simulation_for_delayed_monitors_output:
         # Run once more for synchronization steps in order to get the full delayed monitors' outputs:
+        # Find how many steps we need to simulate:
         remaining_steps = \
             int(np.round((simulation_length + synchronization_time - simulated_steps * dt) / dt))
         if remaining_steps:
             remaining_time = remaining_steps * dt
             if tvb_app.verbosity:
                 tvb_app._logprint("Simulating for excess time %0.3f..." % remaining_time)
+            # Set the remaining steps as simulation time, assuming it is less than the original synchronization time:
             tvb_app.cosimulator.synchronization_time = remaining_time
             tvb_app.cosimulator.synchronization_n_step = remaining_steps
             nest_app.synchronization_time = remaining_time
-            current_simulated_steps, trans_to_tvb_cosim_updates = \
+            current_simulated_steps, tvb_to_trans_cosim_updates, nest_to_trans_cosim_update = \
                 run_for_synchronization_time(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
-                                             trans_to_tvb_cosim_updates)
+                                             tvb_to_trans_cosim_updates, nest_to_trans_cosim_update)
             simulated_steps += current_simulated_steps
+            # Restore the original synchronization_time
             tvb_app.cosimulator.synchronization_time = synchronization_time
             tvb_app.cosimulator.synchronization_n_step = synchronization_n_step
             nest_app.synchronization_time = synchronization_time
 
+    # Update the simulation length of the TVB cosimulator:
     tvb_app.cosimulator.simulation_length = simulated_steps * dt  # update the configured value
 
-    return tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app, trans_to_tvb_cosim_updates
+    return tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app, tvb_to_trans_cosim_updates, nest_to_trans_cosim_update
 
 
 def run_example(plot=True):
@@ -212,7 +239,7 @@ def run_example(plot=True):
     nest_to_tvb_app = nest_to_tvb_init(config)
 
     # Run serially for this test:
-    tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app, trans_to_tvb_cosim_updates = \
+    tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app, tvb_to_trans_cosim_updates, nest_to_trans_cosim_update = \
         run_cosimulation(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
                          advance_simulation_for_delayed_monitors_output=True)
 
