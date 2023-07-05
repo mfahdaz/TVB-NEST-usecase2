@@ -224,7 +224,7 @@ def run_cosimulation(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
     tvb_to_trans_cosim_updates = tvb_app.send_cosim_coupling()
     # Correct time for TVB initial conditions:
     tvb_to_trans_cosim_updates[0][0] = 1 - tvb_to_trans_cosim_updates[0][0]
-    tvb_to_trans_cosim_updates[0][0] = 0
+    tvb_to_trans_cosim_updates[0][1] = 0
     print(tvb_to_trans_cosim_updates)
     # NEST initial condition update towards TVB:
     nest_to_trans_cosim_updates = None
