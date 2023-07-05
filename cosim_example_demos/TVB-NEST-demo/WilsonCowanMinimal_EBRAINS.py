@@ -222,6 +222,7 @@ def run_cosimulation(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
     simulated_steps = 0
     # TVB initial condition cosimulation coupling towards NEST:
     tvb_to_trans_cosim_updates = tvb_app.send_cosim_coupling()
+    print(tvb_to_trans_cosim_updates)
     # NEST initial condition update towards TVB:
     nest_to_trans_cosim_updates = None
 
@@ -302,11 +303,12 @@ def backend(config=None, plot=True):
         config.figures.SAVE_FLAG = True
         config.figures.FIG_FORMAT = 'png'
         plotter = Plotter(config.figures)
-                           # Set the transient time to be optionally removed from results:
-        tvb_plot_kwargs = {"transient": 0.1 * tvb_app.cosimulator.simulation_length,
+        # Kwargs for TVB and NEST to plot (they will default if not provided to the Apps):
+        tvb_plot_kwargs = {# Set the transient time to be optionally removed from results:
+                           "transient": 0.1 * tvb_app.cosimulator.simulation_length,
                            "plotter": plotter}
         nest_plot_kwargs = dict(tvb_plot_kwargs)
-        nest_plot_kwargs.update({"time": results[0][0],
+        nest_plot_kwargs.update({"time": results[0][0], # TODO: Check if time is necessary!!!
                                  # Set to False for faster plotting of only mean field variables and dates,
                                  # apart from spikes" rasters:
                                  "plot_per_neuron": False})
