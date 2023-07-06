@@ -107,7 +107,9 @@ def backend(config, plot=True):
        - builds all components based on user provided configurations,
        - configures them for cosimulation,
        - performs cosimulation,
-       - and finalizes (plotting, cleaning up)."""
+       - and finalizes (plotting, cleaning up).
+       # TODO: It needs to be split to 4 independent processes for TVB, NEST, and the two transformers' interfaces!!!
+       """
 
     # Build and configure all Apps, and their components, up to the point to start simulation:
     #TVB app, including TVB Simulator and TVB input and output interfaces.
