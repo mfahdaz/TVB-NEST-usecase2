@@ -193,7 +193,7 @@ def run_example(plot=True):
     frontend(config=config)
 
     # BACKEND:
-    return backend(config=config, plot=True)
+    return backend(config=config, plot=plot)
 
 
 def test():
@@ -204,7 +204,7 @@ def test():
 
     SPIKES_NUMBERS_PER_REG = [3200, 3100]
 
-    config = run_example()[-1]
+    config = run_example(plot=True)[-1]
 
     # TVB
     tvb_ts = DataArray.from_dict(
