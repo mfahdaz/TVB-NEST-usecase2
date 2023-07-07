@@ -178,7 +178,7 @@ def backend(config=None, plot=True):
     config.TVB_CONFIG = build_tvb_simulator
 
     # This is a BACKEND script for creating the NEST network instance
-    config.NEST_CONFIG = build_nest_network()
+    config.NEST_CONFIG = build_nest_network
 
     return backend_base(config, plot)
 
