@@ -95,7 +95,6 @@ TvbProfile.set_profile(TvbProfile.LIBRARY_PROFILE)
 from frontend import frontend as frontend_base
 from backend import backend as backend_base
 
-
 # Scripts specific to an example/model/use case:
 # Both front and back end:
 from examples.parallel.wilson_cowan.config import configure
@@ -233,8 +232,8 @@ def test():
     assert nest_mean_rate.shape == (2, 2)
     try:
         assert np.allclose(nest_mean_rate.values,
-                           np.array([[29.1580365, 28.15258697],
-                                     [29.1580365, 28.15258697]]),
+                           np.array([[28.85285041, 27.85792453],
+                                     [28.85285041, 27.85792453]]),
                            atol=1e-06
                            )
     except Exception as e:

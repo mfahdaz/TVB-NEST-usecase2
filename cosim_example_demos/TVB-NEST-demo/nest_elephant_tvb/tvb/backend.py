@@ -42,7 +42,7 @@ def run_for_synchronization_time(tvb_app, trans_to_tvb_cosim_updates):
     # Input "over the wall": trans_to_tvb_cosim_updates
     # Output "over the wall": tvb_to_trans_cosim_updates
     tvb_to_trans_cosim_updates = tvb_app.run_for_synchronization_time(trans_to_tvb_cosim_updates)
-    return tvb_to_trans_cosim_updates
+    return tvb_app, tvb_to_trans_cosim_updates
 
 
 def run_cosimulation(tvb_app, advance_simulation_for_delayed_monitors_output=True):
