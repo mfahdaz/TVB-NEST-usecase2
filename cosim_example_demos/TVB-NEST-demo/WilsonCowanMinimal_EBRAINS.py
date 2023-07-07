@@ -92,8 +92,8 @@ from tvb.basic.profile import TvbProfile
 TvbProfile.set_profile(TvbProfile.LIBRARY_PROFILE)
 
 # Scripts that do not change for different examples/models/use cases:
-from nest_elephant_tvb.frontend import frontend as frontend_base
-from nest_elephant_tvb.backend import backend as backend_base
+from frontend import frontend as frontend_base
+from backend import backend as backend_base
 
 
 # Scripts specific to an example/model/use case:
