@@ -189,7 +189,7 @@ def run_example(plot=True):
     config = configure(config_class=Config)
 
     # Run the frontend if the necessary configuration files have not been already made available by the user:
-    frontend(config=config)
+    # frontend(config=config)
 
     # BACKEND:
     return backend(config=config, plot=plot)
