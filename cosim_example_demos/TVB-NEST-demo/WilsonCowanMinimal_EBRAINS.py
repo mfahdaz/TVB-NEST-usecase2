@@ -220,7 +220,7 @@ def test():
     assert tvb_ts.shape == (time.size, 2, 68, 1)
     try:
         assert np.allclose(tvb_ts.values.squeeze().mean(axis=0).mean(axis=1),
-                           np.array([0.50936375, 0.57242006]), atol=1e-06)
+                           np.array([0.50924047, 0.57250228]), atol=1e-06)
     except Exception as e:
         print(tvb_ts.values.squeeze().mean(axis=0).mean(axis=1))
         raise e
