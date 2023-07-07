@@ -92,11 +92,25 @@ def run_cosimulation(tvb_app, advance_simulation_for_delayed_monitors_output=Tru
     return tvb_app, tvb_to_trans_cosim_updates
 
 
-def final(tvb_app, plot=True, **kwargs):
+def final(tvb_app, plot=True):
+    # Plot if necessary (for the moment, necessary for the test to run):
     if plot:
-        tvb_app.plot(**kwargs)
+        # Create a Plotter instance (or it will be created by default within each App):
+        from tvb_multiscale.core.plot.plotter import Plotter
+        config = tvb_app.config
+        config.figures.SHOW_FLAG = True
+        config.figures.SAVE_FLAG = True
+        config.figures.FIG_FORMAT = 'png'
+        plotter = Plotter(config.figures)
+        # Kwargs for TVB to plot (they will default if not provided to the Apps):
+        plot_kwargs = {  # Set the transient time to be optionally removed from results:
+            "transient": config.TRANSIENT,
+            "plotter": plotter}
+        tvb_app.plot(**plot_kwargs)
+
     tvb_app.clean_up()
     tvb_app.stop()
+
     return tvb_app
 
 
@@ -119,22 +133,8 @@ def backend(config, plot=True, advance_simulation_for_delayed_monitors_output=Tr
     # Get TVB results:
     results = list(tvb_app.return_tvb_results())
 
-    # Plot if necessary (for the moment, necessary for the test to run):
-    tvb_plot_kwargs = {}
-    if plot:
-        # Create a Plotter instance (or it will be created by default within each App):
-        from tvb_multiscale.core.plot.plotter import Plotter
-        config.figures.SHOW_FLAG = True
-        config.figures.SAVE_FLAG = True
-        config.figures.FIG_FORMAT = 'png'
-        plotter = Plotter(config.figures)
-        # Kwargs for TVB to plot (they will default if not provided to the Apps):
-        plot_kwargs = {  # Set the transient time to be optionally removed from results:
-            "transient": config.TRANSIENT,
-            "plotter": plotter}
-
     # Finalize (including optional plotting), cleaning up, etc...
-    tvb_app = final(tvb_app, plot=plot, **plot_kwargs)
+    tvb_app = final(tvb_app, plot=plot)
 
     # Delete app, optionally:
     del tvb_app

@@ -27,6 +27,8 @@ def run_for_synchronization_time(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb
        The ENTRYPOINT here is just the cosimulation updates' data,
        which are "thrown over the wall" for the necessary data exchanges.
     """
+    # 1. First transform...
+    # The order of the transformers shouldn't matter. They could run in parallel.
     # Transform TVB -> NEST couplings at time t...
     if tvb_to_trans_cosim_updates is not None:
         # ...if any:
@@ -39,6 +41,9 @@ def run_for_synchronization_time(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb
         trans_to_tvb_cosim_updates = nest_to_tvb_app.run_for_synchronization_time(nest_to_trans_cosim_updates)
     else:
         trans_to_tvb_cosim_updates = None
+
+    # 2. Then simulate...
+    # The order of the simulators shouldn't matter. They should run in parallel.
     # TVB t -> t + Tsync
     # Simulate TVB with or without inputs
     tvb_to_trans_cosim_updates = tvb_app.run_for_synchronization_time(trans_to_tvb_cosim_updates)
@@ -66,12 +71,14 @@ def run_cosimulation(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
     dt = tvb_app.cosimulator.integrator.dt
 
     # Initial conditions of co-simulation:
+    # For TVB loop:
     # Steps left to simulate:
     remaining_steps = int(np.round(simulation_length / dt))
     # Steps already simulated:
     simulated_steps = 0
     # TVB initial condition cosimulation coupling towards NEST:
     tvb_to_trans_cosim_updates = tvb_app.tvb_init_cosim_coupling
+    # For NEST loop:
     # NEST initial condition update towards TVB:
     nest_to_trans_cosim_updates = None
 
@@ -112,13 +119,15 @@ def backend(config, plot=True, advance_simulation_for_delayed_monitors_output=Tr
        """
 
     # Build and configure all Apps, and their components, up to the point to start simulation:
-    #TVB app, including TVB Simulator and TVB input and output interfaces.
+    # Please keep this sequence to be safe (TODO: Test against disturbing the order):
+    # 1. TVB app, including TVB Simulator and TVB input and output interfaces.
     tvb_app = tvb_init(config, config.TVB_CONFIG)
-    # NEST app, including NEST network and NEST input and output interfaces:
+    # 2. NEST app, including NEST network and NEST input and output interfaces:
     nest_app = nest_init(config, config.NEST_CONFIG)
-    # TVB to NEST app, including TVB to NEST interfaces and their transformers:
+    # The order of the last to doesn't matter:
+    # 3. TVB to NEST app, including TVB to NEST interfaces and their transformers:
     tvb_to_nest_app = tvb_to_nest_init(config)
-    # NEST to TVB app, including NEST to TVB interfaces and their transformers:
+    # 3. NEST to TVB app, including NEST to TVB interfaces and their transformers:
     nest_to_tvb_app = nest_to_tvb_init(config)
 
     # Run serially for this test:
@@ -129,31 +138,15 @@ def backend(config, plot=True, advance_simulation_for_delayed_monitors_output=Tr
     # Get TVB results:
     results = list(tvb_app.return_tvb_results())
 
-    # Plot if necessary (for the moment, necessary for the test to run):
-    tvb_plot_kwargs = {}
-    nest_plot_kwargs = {}
-    if plot:
-        # Create a Plotter instance (or it will be created by default within each App):
-        from tvb_multiscale.core.plot.plotter import Plotter
-        config.figures.SHOW_FLAG = True
-        config.figures.SAVE_FLAG = True
-        config.figures.FIG_FORMAT = 'png'
-        plotter = Plotter(config.figures)
-        # Kwargs for TVB and NEST to plot (they will default if not provided to the Apps):
-        tvb_plot_kwargs = {# Set the transient time to be optionally removed from results:
-                           "transient": config.TRANSIENT,
-                           "plotter": plotter}
-        nest_plot_kwargs = dict(tvb_plot_kwargs)
-        nest_plot_kwargs.update({"time": results[0][0], # TODO: Check if time is necessary!!!
-                                 # Set to False for faster plotting of only mean field variables and dates,
-                                 # apart from spikes" rasters:
-                                 "plot_per_neuron": False})
-
     # Finalize (including optional plotting), cleaning up, etc...
+    # Better to reverse here the order of initialization of the Apps:
+    # 1. Transformers (no matter the sequence:
     nest_to_tvb_app = trans_final(nest_to_tvb_app)
     tvb_to_nest_app = trans_final(tvb_to_nest_app)
-    nest_app = nest_final(nest_app, plot=plot, **nest_plot_kwargs)
-    tvb_app = tvb_final(tvb_app, plot=plot, **tvb_plot_kwargs)
+    # 2. NEST:
+    nest_app = nest_final(nest_app, plot=plot)
+    # 3. TVB:
+    tvb_app = tvb_final(tvb_app, plot=plot)
 
     # Delete apps, optionally:
     del tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app
