@@ -102,7 +102,7 @@ def run_cosimulation(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
            tvb_to_trans_cosim_updates, nest_to_trans_cosim_updates
 
 
-def backend(config, plot=True):
+def backend(config, plot=True, advance_simulation_for_delayed_monitors_output=True):
     """Function that
        - builds all components based on user provided configurations,
        - configures them for cosimulation,
@@ -124,7 +124,7 @@ def backend(config, plot=True):
     # Run serially for this test:
     tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app, tvb_to_trans_cosim_updates, nest_to_trans_cosim_update = \
         run_cosimulation(tvb_app, nest_app, tvb_to_nest_app, nest_to_tvb_app,
-                         advance_simulation_for_delayed_monitors_output=True)
+                         advance_simulation_for_delayed_monitors_output=advance_simulation_for_delayed_monitors_output)
 
     # Get TVB results:
     results = list(tvb_app.return_tvb_results())
@@ -141,15 +141,13 @@ def backend(config, plot=True):
         plotter = Plotter(config.figures)
         # Kwargs for TVB and NEST to plot (they will default if not provided to the Apps):
         tvb_plot_kwargs = {# Set the transient time to be optionally removed from results:
-                           "transient": 0.1 * tvb_app.cosimulator.simulation_length,
+                           "transient": config.TRANSIENT,
                            "plotter": plotter}
         nest_plot_kwargs = dict(tvb_plot_kwargs)
         nest_plot_kwargs.update({"time": results[0][0], # TODO: Check if time is necessary!!!
                                  # Set to False for faster plotting of only mean field variables and dates,
                                  # apart from spikes" rasters:
                                  "plot_per_neuron": False})
-
-        # ### TVB plots and Spiking Network plots upon finalizing
 
     # Finalize (including optional plotting), cleaning up, etc...
     nest_to_tvb_app = trans_final(nest_to_tvb_app)
