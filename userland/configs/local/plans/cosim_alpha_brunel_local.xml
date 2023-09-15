@@ -30,7 +30,7 @@
             </var_003>
             <var_004>
                 <var_name>CO_SIM_ROUTINES_PATH</var_name>
-                <var_value>{CO_SIM_USE_CASE_ROOT_PATH}/action_adapters_alphabrunel</var_value>
+                <var_value>{CO_SIM_USE_CASE_ROOT_PATH}/action_adapters</var_value>
             </var_004>
             <var_006>
                 <var_name>CO_SIM_EXECUTION_ENVIRONMENT</var_name>
