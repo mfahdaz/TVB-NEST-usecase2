@@ -54,13 +54,18 @@ CO_SIM_NEST_BUILD=${CO_SIM_ROOT_PATH}/nest-build
 CO_SIM_NEST=${CO_SIM_ROOT_PATH}/nest
 
 #
-# STEP 2 - installing linux packages
+# STEP 2.1 - Install base packages
 #
-# STEP 2.1 - base packages
 echo
 echo "STEP 2.1 - installing base packages"
 echo
-sudo apt update
+# Update and upgrade installed base packages
+sudo apt update && sudo apt upgrade -y
+# Add repository for cmake 3.18+ (currently 3.27)
+sudo apt update && sudo apt install -y software-properties-common lsb-release
+sudo wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+# Install packages
 sudo apt install -y build-essential cmake git python3 python3-pip
 #
 # STEP 2.2 - packages used by NEST, TVB and the use-case per se
@@ -97,12 +102,13 @@ echo "1" | sudo update-alternatives --config mpirun 1>/dev/null 2>&1 # --> choos
 
 # NOTE: Specific versions are required for some packages
 # NOTE The order is important here to let TVB finda and install correct dependencies such as numpy<1.24 for numba0.56
-# TVB installation
+# TVB instllation
 echo
 echo "STEP 3 - installing TVB and python dependencies (specific versions)"
 echo
 pip install --no-cache --target=${CO_SIM_SITE_PACKAGES} tvb-library==2.8 tvb-contrib==2.7.2 tvb-gdist==2.2 \
-							cython elephant mpi4py numpy==1.23.4 pyzmq requests testresources pandas xarray
+							cython elephant mpi4py numpy==1.23.4 pyzmq requests testresources pandas xarray \
+							flask flask-cors gunicorn
 
 
 # jupyter notebook stuff
@@ -123,18 +129,22 @@ git clone --recurse-submodules --jobs 4 https://github.com/${GIT_DEFAULT_NAME}/T
 # International Neuroinformatics Coordinating Facility (INCF) 
 # https://github.com/INCF/MUSIC
 # https://github.com/INCF/libneurosim
+git clone https://github.com/nest/nest-simulator.git
+cd nest-simulator
+# 9cb3cb: Merge pull request from VRGroupRWTH/feature/device_label (https://github.com/nest/nest-simulator/commit/9cb3cb2ec1cc76e278ed7e9a8850609fdb443cae) 
+# TODO: Needed until NEST v3.6 release to incorporate the aforementioned pull request.
+git checkout 9cb3cb
+cd ..
 
 # Cython
 export PATH=${CO_SIM_SITE_PACKAGES}/bin:${PATH}
 export PYTHONPATH=${CO_SIM_SITE_PACKAGES}:${PYTHONPATH:+:$PYTHONPATH}
 
-mkdir -p ${CO_SIM_NEST_BUILD}
-mkdir -p ${CO_SIM_NEST}
+mkdir -p ${CO_SIM_NEST} ${CO_SIM_NEST_BUILD}; cd ${CO_SIM_NEST_BUILD}
 
-cd ${CO_SIM_NEST_BUILD}
 cmake \
     -DCMAKE_INSTALL_PREFIX:PATH=${CO_SIM_NEST} \
-    ${CO_SIM_ROOT_PATH}/TVB-NEST-usecase2/nest-simulator/ \
+    ${CO_SIM_ROOT_PATH}/nest-simulator \
     -Dwith-mpi=ON \
     -Dwith-openmp=ON \
     -Dwith-readline=ON \
@@ -144,8 +154,8 @@ cmake \
     -DPYTHON_INCLUDE_DIR=/usr/include/python3.10 \
     -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.10.so
 
-make -j 3
-make install
+make -j 4
+make -j 4 install
 cd ${CO_SIM_ROOT_PATH}
 
 #
@@ -199,7 +209,7 @@ export PATH=${CO_SIM_NEST}/bin:${PATH}
 
 # source TVB_NEST_usecase2.source
 echo
-echo "STEP 9 - sourcing TVB-NEST-usecase2.source"
+echo "sourcing TVB-NEST-usecase2.source"
 echo
 source ${CO_SIM_ROOT_PATH}/TVB-NEST-usecase2.source
 
@@ -235,7 +245,7 @@ echo \$PATH | grep ${CO_SIM_NEST}/bin 1>/dev/null 2>&1
 [ \$? -eq 0 ] || export PATH=$CO_SIM_NEST/bin:\${PATH}
 python3 \${CO_SIM_USE_CASE_ROOT_PATH}/main.py \\
     --global-settings \${CO_SIM_MODULES_ROOT_PATH}/EBRAINS_WorkflowConfigurations/general/global_settings.xml \\
-    --action-plan \${CO_SIM_MODULES_ROOT_PATH}/EBRAINS_WorkflowConfigurations/usecase/local/plans/cosim_alpha_brunel_local.xml
+    --action-plan \${CO_SIM_USE_CASE_ROOT_PATH}/userland/configs/local/plans/cosim_alpha_brunel_local.xml
 .EORF
 
 cat <<.EOKF >${CO_SIM_ROOT_PATH}/kill_co_sim_PIDs.sh
